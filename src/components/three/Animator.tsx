@@ -1,4 +1,3 @@
-
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
@@ -14,7 +13,7 @@ interface AnimationProps {
   renderer: THREE.WebGLRenderer;
   scene: THREE.Scene;
   camera: THREE.PerspectiveCamera;
-  planetObjects: Map<string, PlanetObject>;
+  planetObjects: Map<string, any>;
   selectedPlanetId: string;
   isSpaceView?: boolean;
 }
@@ -26,159 +25,146 @@ export const setupAnimation = ({
   planetObjects,
   selectedPlanetId,
   isSpaceView = false
-}: AnimationProps): { frameId: number; controls: OrbitControls } => {
-  let frameId = 0;
-  
-  // Create orbit controls for interactive camera movement
+}: AnimationProps) => {
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
   controls.dampingFactor = 0.05;
-  controls.rotateSpeed = 0.5;
-  
-  // Set initial camera position based on selected planet
-  const selectedPlanet = planetObjects.get(selectedPlanetId);
-  if (selectedPlanet) {
-    camera.position.x = selectedPlanet.mesh.position.x;
-    camera.position.z = selectedPlanet.mesh.position.z + 8;
-    controls.target.copy(selectedPlanet.mesh.position);
-  } else {
-    // Default position focusing on the sun
-    camera.position.set(0, 20, 50);
-    controls.target.set(0, 0, 0);
-  }
-  
-  // If in space view mode, position camera farther away for a better overview
-  if (isSpaceView) {
-    camera.position.set(0, 50, 120);
-    controls.target.set(0, 0, 0);
-  }
-  
-  controls.update();
-  
-  // Different rotation speeds for each planet
-  const rotationSpeeds = new Map([
-    ['mercury', 0.004],
-    ['venus', 0.002],
-    ['earth', 0.001],
-    ['mars', 0.0008],
-    ['jupiter', 0.0004],
-    ['saturn', 0.0003],
-    ['uranus', 0.0002],
-    ['neptune', 0.0001]
-  ]);
-  
-  // Different orbit speeds for each planet
-  const orbitSpeeds = new Map([
-    ['mercury', 0.008],
-    ['venus', 0.005],
-    ['earth', 0.003],
-    ['mars', 0.002],
-    ['jupiter', 0.001],
-    ['saturn', 0.0008],
-    ['uranus', 0.0005],
-    ['neptune', 0.0003]
-  ]);
-  
-  // Animation angles for orbits
-  const orbitAngles = new Map<string, number>();
-  planetObjects.forEach((_, id) => {
-    orbitAngles.set(id, Math.random() * Math.PI * 2); // Random starting position
-  });
-  
-  // Moon orbit angles
-  const moonOrbitAngles = new Map<string, number>();
-  planetObjects.forEach((_, id) => {
-    moonOrbitAngles.set(id, Math.random() * Math.PI * 2);
-  });
-  
+  controls.enableZoom = true;
+  controls.autoRotate = false;
+
+  let time = 0;
+  const targetPosition = new THREE.Vector3();
+  const targetLookAt = new THREE.Vector3();
+
   const animate = () => {
-    frameId = requestAnimationFrame(animate);
+    time += 0.005;
     
-    planetObjects.forEach((planetObj, id) => {
-      const rotationSpeed = rotationSpeeds.get(id) || 0.001;
-      const orbitSpeed = orbitSpeeds.get(id) || 0.001;
-      
-      // Update planet rotation (around its axis)
-      if (planetObj.mesh) {
-        planetObj.mesh.rotation.y += rotationSpeed;
-      }
-      
-      // Update planet position (orbit around sun)
-      if (orbitAngles.has(id)) {
-        let angle = orbitAngles.get(id)! + orbitSpeed;
-        if (angle > Math.PI * 2) angle -= Math.PI * 2;
-        orbitAngles.set(id, angle);
+    // Animate planets in their orbits
+    planetObjects.forEach((planetObj, planetId) => {
+      if (planetObj.mesh && planetObj.orbitMesh) {
+        // Get orbit radius from the orbit mesh
+        const positions = planetObj.orbitMesh.geometry.attributes.position.array;
+        const orbitRadius = Math.sqrt(positions[0] * positions[0] + positions[2] * positions[2]);
         
-        // Calculate the distance from the data or the orbit mesh
-        const distance = planetObj.orbitMesh ? 
-          ((planetObj.orbitMesh.geometry as any).parameters?.radius || 
-          (id === 'mercury' ? 12 : 
-           id === 'venus' ? 20 : 
-           id === 'earth' ? 30 : 
-           id === 'mars' ? 40 : 
-           id === 'jupiter' ? 55 : 
-           id === 'saturn' ? 75 : 
-           id === 'uranus' ? 90 : 
-           id === 'neptune' ? 105 : 30)) : 30;
+        // Different orbital speeds for different planets
+        const speedMultiplier = getOrbitalSpeed(planetId);
+        const angle = time * speedMultiplier;
         
-        planetObj.mesh.position.x = Math.cos(angle) * distance;
-        planetObj.mesh.position.z = Math.sin(angle) * distance;
+        planetObj.mesh.position.x = Math.cos(angle) * orbitRadius;
+        planetObj.mesh.position.z = Math.sin(angle) * orbitRadius;
         
-        // Update Saturn's rings position if they exist
-        if (planetObj.ringsMesh && id === 'saturn') {
-          // The rings are already attached to the planet mesh, so they will follow
+        // Rotate the planet on its axis
+        planetObj.mesh.rotation.y += 0.01;
+        
+        // Update Saturn's rings position to follow the planet
+        if (planetId === 'saturn' && planetObj.ringsMesh) {
+          planetObj.ringsMesh.position.copy(planetObj.mesh.position);
+          planetObj.ringsMesh.rotation.y += 0.003; // Slight ring rotation
         }
-      }
-      
-      // Update moon if it exists (only for Earth for now)
-      if (planetObj.moonMesh && id === 'earth') {
-        let moonAngle = moonOrbitAngles.get(id)! + 0.01; // Moon moves faster
-        if (moonAngle > Math.PI * 2) moonAngle -= Math.PI * 2;
-        moonOrbitAngles.set(id, moonAngle);
         
-        const moonDistance = 1.5;
-        planetObj.moonMesh.position.x = planetObj.mesh.position.x + Math.cos(moonAngle) * moonDistance;
-        planetObj.moonMesh.position.y = planetObj.mesh.position.y;
-        planetObj.moonMesh.position.z = planetObj.mesh.position.z + Math.sin(moonAngle) * moonDistance;
-        
-        // Update moon orbit position
-        if (planetObj.moonOrbitMesh) {
-          planetObj.moonOrbitMesh.position.copy(planetObj.mesh.position);
+        // Animate moons if they exist
+        if (planetObj.moons && planetObj.moonOrbitMeshes) {
+          planetObj.moons.forEach((moon: THREE.Mesh, index: number) => {
+            const moonOrbit = planetObj.moonOrbitMeshes[index];
+            if (moonOrbit) {
+              const moonPositions = moonOrbit.geometry.attributes.position.array;
+              const moonRadius = Math.sqrt(moonPositions[0] * moonPositions[0] + moonPositions[2] * moonPositions[2]);
+              
+              // Faster moon orbital speed
+              const moonAngle = time * (speedMultiplier * 5 + index);
+              
+              moon.position.x = planetObj.mesh.position.x + Math.cos(moonAngle) * moonRadius;
+              moon.position.y = planetObj.mesh.position.y;
+              moon.position.z = planetObj.mesh.position.z + Math.sin(moonAngle) * moonRadius;
+              
+              // Update moon orbit position
+              moonOrbit.position.copy(planetObj.mesh.position);
+            }
+          });
         }
       }
     });
-    
-    // Make camera follow selected planet only if not in space view mode
+
+    // Animate asteroid belt rotation
+    const asteroidBelt = scene.getObjectByName('asteroidBelt');
+    if (asteroidBelt) {
+      asteroidBelt.rotation.y += 0.0005;
+    }
+
+    // Animate Kuiper belt rotation (slower)
+    const kuiperBelt = scene.getObjectByName('kuiperBelt');
+    if (kuiperBelt) {
+      kuiperBelt.rotation.y += 0.0002;
+    }
+
+    // Animate comets along their orbits
+    const comets = scene.getObjectByName('comets');
+    if (comets) {
+      comets.children.forEach((comet, index) => {
+        const cometAngle = time * 0.1 + (index * Math.PI * 2 / comets.children.length);
+        const distance = 200 + Math.sin(time * 0.2 + index) * 100;
+        
+        comet.position.x = Math.cos(cometAngle) * distance;
+        comet.position.z = Math.sin(cometAngle) * distance;
+        
+        // Update tail direction to point away from sun
+        comet.lookAt(0, 0, 0);
+        comet.rotateY(Math.PI);
+      });
+    }
+
+    // Handle camera movement based on space view mode
     if (!isSpaceView) {
       const selectedPlanet = planetObjects.get(selectedPlanetId);
-      if (selectedPlanet) {
-        // Smoothly update the orbit controls target to follow the planet
-        const smoothness = 0.1; // Lower values make the camera movement smoother
-        controls.target.lerp(selectedPlanet.mesh.position, smoothness);
+      if (selectedPlanet?.mesh) {
+        // Smoothly follow the selected planet
+        targetPosition.copy(selectedPlanet.mesh.position);
+        targetPosition.y += 25; // Higher up for better view
+        targetPosition.z += 40; // Further back for wider view
         
-        // Also update camera position to follow at a fixed distance
-        const cameraOffset = new THREE.Vector3(0, 4, 8); // Offset from planet
-        const idealPosition = selectedPlanet.mesh.position.clone().add(cameraOffset);
-        camera.position.lerp(idealPosition, smoothness);
+        targetLookAt.copy(selectedPlanet.mesh.position);
+        
+        // Use lerp for smooth camera movement
+        camera.position.lerp(targetPosition, 0.02);
+        
+        const currentTarget = controls.target.clone();
+        currentTarget.lerp(targetLookAt, 0.02);
+        controls.target.copy(currentTarget);
       }
     }
-    
-    // Update orbit controls
+
     controls.update();
-    
-    // Render the scene
     renderer.render(scene, camera);
+    
+    return requestAnimationFrame(animate);
+  };
+
+  const frameId = animate();
+  
+  return { frameId, controls };
+};
+
+// Helper function to get orbital speeds for different planets
+const getOrbitalSpeed = (planetId: string): number => {
+  const speeds: { [key: string]: number } = {
+    mercury: 2.0,
+    venus: 1.6,
+    earth: 1.0,
+    mars: 0.8,
+    jupiter: 0.4,
+    saturn: 0.3,
+    uranus: 0.2,
+    neptune: 0.15
   };
   
-  animate();
-  return { frameId, controls };
+  return speeds[planetId] || 1.0;
 };
 
 export const setupResizeHandler = (
   camera: THREE.PerspectiveCamera,
   renderer: THREE.WebGLRenderer,
   mountRef: React.RefObject<HTMLDivElement>
-): (() => void) => {
+) => {
   const handleResize = () => {
     if (!mountRef.current) return;
     
@@ -189,10 +175,9 @@ export const setupResizeHandler = (
     camera.updateProjectionMatrix();
     renderer.setSize(width, height);
   };
-  
+
   window.addEventListener('resize', handleResize);
   
-  // Return cleanup function
   return () => {
     window.removeEventListener('resize', handleResize);
   };
@@ -200,22 +185,21 @@ export const setupResizeHandler = (
 
 // Create orbit path lines
 export const createOrbitPath = (radius: number): THREE.Line => {
-  const segments = 128;
-  const orbitGeometry = new THREE.BufferGeometry();
+  const geometry = new THREE.BufferGeometry();
   const vertices = [];
-  
-  for (let i = 0; i <= segments; i++) {
-    const theta = (i / segments) * Math.PI * 2;
+
+  for (let i = 0; i <= 64; i++) {
+    const theta = (i / 64) * Math.PI * 2;
     vertices.push(Math.cos(theta) * radius, 0, Math.sin(theta) * radius);
   }
-  
-  orbitGeometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-  
-  const orbitMaterial = new THREE.LineBasicMaterial({ 
-    color: 0x444444,
+
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+
+  const material = new THREE.LineBasicMaterial({
+    color: 0x555555,
     transparent: true,
     opacity: 0.3
   });
-  
-  return new THREE.Line(orbitGeometry, orbitMaterial);
+
+  return new THREE.Line(geometry, material);
 };

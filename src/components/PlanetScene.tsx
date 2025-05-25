@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { PlanetData } from '@/data/planets';
@@ -96,6 +95,17 @@ const PlanetScene = ({ planet, planets, onSceneReady, isSpaceView = false }: Pla
     // Create all planets, the sun, and their orbits
     const solarSystem = createSolarSystem(scene, planets, setIsLoading, onSceneReady);
     planetObjectsRef.current = solarSystem.planetObjects;
+    
+    // Add names to objects for animation reference
+    if (solarSystem.asteroidBelt) {
+      solarSystem.asteroidBelt.name = 'asteroidBelt';
+    }
+    if (solarSystem.kuiperBelt) {
+      solarSystem.kuiperBelt.name = 'kuiperBelt';
+    }
+    if (solarSystem.comets) {
+      solarSystem.comets.name = 'comets';
+    }
     
     // Set up animation loop with the selected planet
     const { frameId, controls } = setupAnimation({

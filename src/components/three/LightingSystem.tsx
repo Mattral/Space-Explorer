@@ -1,33 +1,41 @@
 
 import * as THREE from 'three';
 
-export const createLighting = (scene: THREE.Scene): void => {
-  // Ambient light for base illumination - slightly brighter
-  const ambientLight = new THREE.AmbientLight(0x404040, 1.0);
+export const createLighting = (scene: THREE.Scene) => {
+  // Ambient light for general illumination
+  const ambientLight = new THREE.AmbientLight(0x404040, 0.4);
   scene.add(ambientLight);
   
-  // Create the sun as a light source
-  const sunLight = new THREE.PointLight(0xffffcc, 2);
-  sunLight.position.set(0, 0, 0); // Sun at center of system
-  sunLight.castShadow = true;
+  // Point light at the center (Sun)
+  const sunLight = new THREE.PointLight(0xffffff, 2, 2000);
+  sunLight.position.set(0, 0, 0);
   scene.add(sunLight);
   
-  // Create a visual sun object - Significantly increased sun size from 5.0 to 8.0
-  const sunGeometry = new THREE.SphereGeometry(8.0, 64, 64);
-  
-  // Use MeshStandardMaterial for emissive properties
-  const sunMaterial = new THREE.MeshStandardMaterial({
+  // Create the Sun as a glowing sphere - MUCH LARGER
+  const sunGeometry = new THREE.SphereGeometry(25, 64, 64); // Much larger sun
+  const sunMaterial = new THREE.MeshBasicMaterial({
     color: 0xffff00,
-    emissive: 0xffff00,
-    emissiveIntensity: 1,
-    metalness: 0.1,
-    roughness: 0.7
+    emissive: 0xffaa00,
+    emissiveIntensity: 0.8,
   });
   
-  const sunMesh = new THREE.Mesh(sunGeometry, sunMaterial);
-  scene.add(sunMesh);
+  const sun = new THREE.Mesh(sunGeometry, sunMaterial);
+  scene.add(sun);
   
-  // Add a subtle hemispheric light for better overall illumination
-  const hemisphereLight = new THREE.HemisphereLight(0xffffcc, 0x080820, 0.8);
-  scene.add(hemisphereLight);
+  // Add a subtle glow effect around the sun
+  const glowGeometry = new THREE.SphereGeometry(30, 32, 32); // Slightly larger for glow
+  const glowMaterial = new THREE.MeshBasicMaterial({
+    color: 0xffaa00,
+    transparent: true,
+    opacity: 0.2,
+    side: THREE.BackSide,
+  });
+  
+  const sunGlow = new THREE.Mesh(glowGeometry, glowMaterial);
+  scene.add(sunGlow);
+  
+  // Additional directional light for better planet illumination
+  const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+  directionalLight.position.set(50, 50, 50);
+  scene.add(directionalLight);
 };
