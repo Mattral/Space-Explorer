@@ -1,0 +1,393 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;500;600;700;800&display=swap');
+
+@layer base {
+  :root {
+    /* Deep Space Foundation */
+    --background: 222 47% 4%;
+    --foreground: 210 40% 96%;
+
+    --card: 222 40% 7%;
+    --card-foreground: 210 40% 94%;
+
+    --popover: 222 40% 6%;
+    --popover-foreground: 210 40% 94%;
+
+    /* Electric Cyan — primary accent (like instrument displays) */
+    --primary: 188 100% 50%;
+    --primary-foreground: 222 47% 4%;
+
+    --secondary: 222 30% 12%;
+    --secondary-foreground: 210 30% 80%;
+
+    --muted: 222 25% 10%;
+    --muted-foreground: 215 20% 42%;
+
+    /* Violet accent for highlights */
+    --accent: 265 80% 65%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 215 30% 14%;
+    --input: 215 30% 12%;
+    --ring: 188 100% 50%;
+
+    --radius: 0.5rem;
+
+    /* === Astrophysics Color System === */
+    /* Signal / Telemetry */
+    --signal: 188 100% 50%;
+    --signal-dim: 188 80% 35%;
+    --signal-glow: 188 100% 60%;
+
+    /* Solar gold */
+    --solar: 42 100% 55%;
+    --solar-dim: 38 80% 40%;
+
+    /* Alert red */
+    --alert: 0 85% 60%;
+    --alert-dim: 0 65% 40%;
+
+    /* Bio green */
+    --bio: 142 70% 45%;
+    --bio-dim: 142 50% 28%;
+
+    /* Deep panel */
+    --panel-bg: 222 50% 5%;
+    --panel-border: 210 40% 18%;
+    --panel-glow: 188 100% 50%;
+
+    /* Sidebar */
+    --sidebar-background: 222 47% 4%;
+    --sidebar-foreground: 210 30% 80%;
+    --sidebar-primary: 188 100% 50%;
+    --sidebar-primary-foreground: 222 47% 4%;
+    --sidebar-accent: 222 30% 10%;
+    --sidebar-accent-foreground: 210 30% 80%;
+    --sidebar-border: 215 30% 14%;
+    --sidebar-ring: 188 100% 50%;
+
+    /* Legacy compat */
+    --nasa-cyan: 188 100% 50%;
+    --nasa-gold: 42 100% 55%;
+    --nasa-red: 0 85% 60%;
+    --nasa-green: 142 70% 45%;
+    --nasa-panel: 222 50% 5%;
+    --nasa-panel-border: 210 40% 18%;
+    --nasa-glow: 188 100% 50%;
+  }
+
+  .dark {
+    --background: 222 47% 4%;
+    --foreground: 210 40% 96%;
+    --card: 222 40% 7%;
+    --card-foreground: 210 40% 94%;
+    --popover: 222 40% 6%;
+    --popover-foreground: 210 40% 94%;
+    --primary: 188 100% 50%;
+    --primary-foreground: 222 47% 4%;
+    --secondary: 222 30% 12%;
+    --secondary-foreground: 210 30% 80%;
+    --muted: 222 25% 10%;
+    --muted-foreground: 215 20% 42%;
+    --accent: 265 80% 65%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 215 30% 14%;
+    --input: 215 30% 12%;
+    --ring: 188 100% 50%;
+  }
+}
+
+@layer base {
+  * { @apply border-border; }
+
+  body {
+    @apply bg-background text-foreground;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-feature-settings: "kern" 1, "liga" 1;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  canvas { display: block; }
+
+  ::-webkit-scrollbar { width: 3px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--panel-border));
+    border-radius: 2px;
+  }
+}
+
+/* ============================================================
+   GLASS PANEL — layered depth system
+   ============================================================ */
+.info-panel {
+  background: linear-gradient(
+    135deg,
+    hsl(var(--panel-bg) / 0.85) 0%,
+    hsl(222 45% 6% / 0.90) 100%
+  );
+  backdrop-filter: blur(24px) saturate(1.8) brightness(1.05);
+  border: 1px solid hsl(var(--panel-border) / 0.6);
+  box-shadow:
+    0 0 0 0.5px hsl(var(--signal) / 0.08) inset,
+    0 1px 0 0 hsl(var(--signal) / 0.12) inset,
+    0 20px 60px -12px hsl(222 60% 2% / 0.8),
+    0 0 40px hsl(var(--signal) / 0.04);
+  position: relative;
+}
+
+.info-panel::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    hsl(var(--signal) / 0.5) 30%,
+    hsl(var(--signal) / 0.8) 50%,
+    hsl(var(--signal) / 0.5) 70%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+/* Panel variant: brighter edge for active state */
+.info-panel-active::before {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    hsl(var(--solar) / 0.6) 30%,
+    hsl(var(--solar) / 1) 50%,
+    hsl(var(--solar) / 0.6) 70%,
+    transparent 100%
+  );
+}
+
+/* ============================================================
+   TELEMETRY TYPOGRAPHY
+   ============================================================ */
+.telemetry-label {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: hsl(var(--signal) / 0.65);
+  line-height: 1.4;
+}
+
+.telemetry-value {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 500;
+  color: hsl(var(--foreground));
+  letter-spacing: 0.02em;
+}
+
+.telemetry-mono {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  color: hsl(var(--signal));
+}
+
+.display-heading {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* ============================================================
+   STATUS INDICATORS
+   ============================================================ */
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: hsl(var(--bio));
+  box-shadow:
+    0 0 4px hsl(var(--bio) / 0.8),
+    0 0 10px hsl(var(--bio) / 0.4);
+  animation: pulse-status 2.4s ease-in-out infinite;
+}
+
+.status-dot-signal {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: hsl(var(--signal));
+  box-shadow:
+    0 0 4px hsl(var(--signal) / 0.9),
+    0 0 12px hsl(var(--signal) / 0.4);
+  animation: pulse-status 1.8s ease-in-out infinite;
+}
+
+@keyframes pulse-status {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+/* ============================================================
+   PLANET NAVIGATION BUTTON
+   ============================================================ */
+.planet-btn {
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  font-family: 'Space Grotesk', sans-serif;
+  border-left: 2px solid transparent;
+}
+
+.planet-btn:hover {
+  background: hsl(var(--signal) / 0.07);
+  border-left-color: hsl(var(--signal) / 0.5);
+}
+
+.planet-btn.active {
+  background: hsl(var(--signal) / 0.12);
+  border-left-color: hsl(var(--signal));
+}
+
+/* ============================================================
+   SCAN / LOADING ANIMATION
+   ============================================================ */
+@keyframes scan-line {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+
+.scan-line {
+  animation: scan-line 1.6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    hsl(var(--signal) / 0.6) 40%,
+    hsl(var(--signal) / 1) 50%,
+    hsl(var(--signal) / 0.6) 60%,
+    transparent 100%
+  );
+  width: 40%;
+  height: 100%;
+}
+
+/* ============================================================
+   RETICLE / TARGETING
+   ============================================================ */
+@keyframes reticle-pulse {
+  0%, 100% { opacity: 0.7; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.04); }
+}
+
+.reticle-ring { animation: reticle-pulse 1.4s ease-in-out infinite; }
+
+/* ============================================================
+   DATA BAR — animated fill
+   ============================================================ */
+.data-bar {
+  position: relative;
+  height: 2px;
+  background: hsl(var(--panel-border) / 0.6);
+  border-radius: 1px;
+  overflow: hidden;
+}
+
+.data-bar-fill {
+  position: absolute;
+  top: 0; left: 0; bottom: 0;
+  border-radius: 1px;
+  background: linear-gradient(90deg, hsl(var(--signal)), hsl(var(--signal-glow)));
+  box-shadow: 0 0 6px hsl(var(--signal) / 0.6);
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ============================================================
+   CORNER BRACKETS — sci-fi HUD decoration
+   ============================================================ */
+.hud-bracket {
+  position: relative;
+}
+
+.hud-bracket::before,
+.hud-bracket::after {
+  content: '';
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-color: hsl(var(--signal) / 0.5);
+  border-style: solid;
+}
+
+.hud-bracket::before {
+  top: 0; left: 0;
+  border-width: 1px 0 0 1px;
+}
+
+.hud-bracket::after {
+  bottom: 0; right: 0;
+  border-width: 0 1px 1px 0;
+}
+
+/* ============================================================
+   GRID OVERLAY — subtle mission control feel
+   ============================================================ */
+.hud-grid {
+  background-image:
+    linear-gradient(hsl(var(--signal) / 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(var(--signal) / 0.025) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* ============================================================
+   PLANET GLOW — per-planet color atmosphere
+   ============================================================ */
+.planet-glow {
+  filter: drop-shadow(0 0 20px var(--planet-color, hsl(var(--signal))));
+}
+
+/* ============================================================
+   ANIMATIONS
+   ============================================================ */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-fade-up { animation: fade-up 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+.animate-fade-in { animation: fade-in 0.4s ease forwards; }
+.animate-float { animation: float 6s ease-in-out infinite; }
+
+/* Shimmer skeleton */
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    hsl(var(--panel-border) / 0.3) 25%,
+    hsl(var(--signal) / 0.1) 50%,
+    hsl(var(--panel-border) / 0.3) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
