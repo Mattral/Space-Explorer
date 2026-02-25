@@ -6,6 +6,7 @@ import PlanetSearch from '@/components/PlanetSearch';
 import PlanetComparison from '@/components/PlanetComparison';
 import TimeLapseControls from '@/components/TimeLapseControls';
 import AstronomerChat from '@/components/AstronomerChat';
+import SolarActivityMonitor from '@/components/SolarActivityMonitor';
 import { planets } from '@/data/planets';
 import { toast } from '@/components/ui/use-toast';
 import SupportChat from '@/components/SupportChat';
@@ -20,6 +21,7 @@ const Index = () => {
   const [highlightPlanetId, setHighlightPlanetId] = useState<string | null>(null);
   const [isComparisonOpen, setIsComparisonOpen] = useState(false);
   const [timeScale, setTimeScale] = useState(1);
+  const [closeUpPlanetId, setCloseUpPlanetId] = useState<string | null>(null);
 
   const selectedPlanet = planets.find(p => p.id === selectedPlanetId) || planets[2];
 
@@ -93,7 +95,20 @@ const Index = () => {
         isSpaceView={isSpaceView}
         highlightPlanetId={highlightPlanetId}
         timeScale={timeScale}
+        closeUpPlanetId={closeUpPlanetId}
+        onCloseUpExit={() => setCloseUpPlanetId(null)}
       />
+
+      {/* Close-up exit button */}
+      {closeUpPlanetId && (
+        <button
+          onClick={() => setCloseUpPlanetId(null)}
+          className="absolute top-20 left-1/2 -translate-x-1/2 z-30 info-panel rounded-xl px-5 py-2.5 flex items-center gap-2 animate-fade-up hover:bg-signal/10 transition-all"
+        >
+          <span className="telemetry-label text-signal">Close-Up: {planets.find(p => p.id === closeUpPlanetId)?.name}</span>
+          <span className="telemetry-label text-muted-foreground">· Click to exit</span>
+        </button>
+      )}
 
       {/* ── Planet info panel ────────────────────────────────── */}
       {sceneReady && <PlanetInfo planet={selectedPlanet} />}
@@ -106,6 +121,7 @@ const Index = () => {
         onToggleSpaceView={handleToggleSpaceView}
         isSpaceView={isSpaceView}
         onOpenComparison={() => setIsComparisonOpen(true)}
+        onCloseUp={(id) => setCloseUpPlanetId(id)}
       />
 
       {/* ── Comparison ───────────────────────────────────────── */}
@@ -172,6 +188,9 @@ const Index = () => {
 
       {/* ── NEO Tracker ──────────────────────────────────── */}
       <NeoTracker />
+
+      {/* ── Solar Activity Monitor ───────────────────────── */}
+      <SolarActivityMonitor />
 
       {/* ── AI Astronomer ─────────────────────────────────── */}
       <AstronomerChat selectedPlanet={selectedPlanet} />

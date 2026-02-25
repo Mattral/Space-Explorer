@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { animateSolarParticles } from './SolarParticles';
+import { createAtmosphereGlow, createCloudLayer, createCityLights, getAtmosphereColor } from './PlanetCloseUp';
 
 interface AnimationProps {
   renderer: THREE.WebGLRenderer;
@@ -9,11 +11,12 @@ interface AnimationProps {
   selectedPlanetId: string;
   isSpaceView?: boolean;
   reticleRef?: React.MutableRefObject<THREE.Group | null>;
-  getTimeScale: () => number; // live time scale accessor
+  getTimeScale: () => number;
+  getCloseUpPlanetId: () => string | null;
 }
 
 export const setupAnimation = ({
-  renderer, scene, camera, planetObjects, selectedPlanetId, isSpaceView = false, reticleRef, getTimeScale,
+  renderer, scene, camera, planetObjects, selectedPlanetId, isSpaceView = false, reticleRef, getTimeScale, getCloseUpPlanetId,
 }: AnimationProps) => {
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
@@ -21,9 +24,11 @@ export const setupAnimation = ({
   controls.enableZoom = true;
   controls.autoRotate = false;
 
-  let simTime = 0; // simulation time (seconds, accumulates with scale)
+  let simTime = 0;
   const targetPosition = new THREE.Vector3();
   const targetLookAt = new THREE.Vector3();
+  let closeUpGroup: THREE.Group | null = null;
+  let currentCloseUpId: string | null = null;
 
   const animate = () => {
     const scale = getTimeScale();
@@ -116,8 +121,72 @@ export const setupAnimation = ({
     const constGroup = scene.getObjectByName('constellations');
     if (constGroup) constGroup.rotation.y += 0.00005;
 
+    // Solar particles
+    animateSolarParticles(scene, simTime);
+
+    // Close-up mode
+    const closeUpId = getCloseUpPlanetId();
+    if (closeUpId && closeUpId !== currentCloseUpId) {
+      // Enter close-up: add atmosphere, clouds, city lights
+      if (closeUpGroup) { scene.remove(closeUpGroup); closeUpGroup = null; }
+      const target = planetObjects.get(closeUpId);
+      if (target?.mesh) {
+        currentCloseUpId = closeUpId;
+        const radius = (target.mesh.geometry as THREE.SphereGeometry).parameters.radius;
+        closeUpGroup = new THREE.Group();
+        closeUpGroup.name = 'closeUpEffects';
+
+        const atmo = createAtmosphereGlow(radius, getAtmosphereColor(closeUpId), 1.2);
+        closeUpGroup.add(atmo);
+
+        if (closeUpId === 'earth') {
+          closeUpGroup.add(createCloudLayer(radius));
+          closeUpGroup.add(createCityLights(radius));
+        }
+
+        closeUpGroup.position.copy(target.mesh.position);
+        scene.add(closeUpGroup);
+      }
+    } else if (!closeUpId && currentCloseUpId) {
+      // Exit close-up
+      if (closeUpGroup) { scene.remove(closeUpGroup); closeUpGroup = null; }
+      currentCloseUpId = null;
+    }
+
+    // Update close-up group position & cloud rotation
+    if (closeUpGroup && currentCloseUpId) {
+      const target = planetObjects.get(currentCloseUpId);
+      if (target?.mesh) {
+        closeUpGroup.position.copy(target.mesh.position);
+        const cloud = closeUpGroup.getObjectByName('cloudLayer');
+        if (cloud) cloud.rotation.y += 0.001 * Math.abs(scale);
+        // Update city lights sun direction
+        const cityLights = closeUpGroup.getObjectByName('cityLights');
+        if (cityLights && (cityLights as THREE.Mesh).material) {
+          const mat = (cityLights as THREE.Mesh).material as THREE.ShaderMaterial;
+          if (mat.uniforms?.sunDir) {
+            const sunDir = target.mesh.position.clone().negate().normalize();
+            mat.uniforms.sunDir.value.copy(sunDir);
+          }
+        }
+      }
+    }
+
     // Camera follow
-    if (!isSpaceView) {
+    if (closeUpId) {
+      const target = planetObjects.get(closeUpId);
+      if (target?.mesh) {
+        const radius = (target.mesh.geometry as THREE.SphereGeometry).parameters.radius;
+        targetPosition.copy(target.mesh.position);
+        targetPosition.y += radius * 0.5;
+        targetPosition.z += radius * 3.5;
+        targetLookAt.copy(target.mesh.position);
+        camera.position.lerp(targetPosition, 0.03);
+        const currentTarget = controls.target.clone();
+        currentTarget.lerp(targetLookAt, 0.03);
+        controls.target.copy(currentTarget);
+      }
+    } else if (!isSpaceView) {
       const selectedPlanet = planetObjects.get(selectedPlanetId);
       if (selectedPlanet?.mesh) {
         targetPosition.copy(selectedPlanet.mesh.position);

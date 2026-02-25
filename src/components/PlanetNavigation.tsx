@@ -1,5 +1,5 @@
 import { PlanetData } from '@/data/planets';
-import { RocketIcon, GitCompareArrows, ChevronRightIcon, Crosshair } from 'lucide-react';
+import { RocketIcon, GitCompareArrows, ChevronRightIcon, Crosshair, Eye } from 'lucide-react';
 import { useState } from 'react';
 
 interface PlanetNavigationProps {
@@ -9,10 +9,11 @@ interface PlanetNavigationProps {
   onToggleSpaceView?: () => void;
   isSpaceView?: boolean;
   onOpenComparison?: () => void;
+  onCloseUp?: (planetId: string) => void;
 }
 
 const PlanetNavigation = ({
-  planets, selectedPlanetId, onSelectPlanet, onToggleSpaceView, isSpaceView = false, onOpenComparison
+  planets, selectedPlanetId, onSelectPlanet, onToggleSpaceView, isSpaceView = false, onOpenComparison, onCloseUp
 }: PlanetNavigationProps) => {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -73,6 +74,15 @@ const PlanetNavigation = ({
                   <span className={`flex-1 text-xs tracking-wide font-body ${isSelected ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
                     {planet.name}
                   </span>
+                  {isSelected && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onCloseUp?.(planet.id); }}
+                      className="p-0.5 rounded hover:bg-signal/20 text-signal/60 hover:text-signal transition-colors"
+                      title="Close-up view"
+                    >
+                      <Eye className="h-3 w-3" />
+                    </button>
+                  )}
                   {isSelected && (
                     <Crosshair className="h-3 w-3 text-signal opacity-70 flex-shrink-0" />
                   )}

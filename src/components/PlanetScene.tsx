@@ -7,6 +7,7 @@ import { createSolarSystem, SolarSystemObjects } from './three/PlanetCreator';
 import { createConstellations } from './three/ConstellationRenderer';
 import { createMissionPaths, animateMissions } from './three/MissionRenderer';
 import { createHYGStarfield } from './three/HYGStarfield';
+import { createSolarParticles } from './three/SolarParticles';
 import { cleanupResources } from './three/ResourceDisposer';
 import { setupAnimation, setupResizeHandler } from './three/Animator';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
@@ -17,10 +18,12 @@ interface PlanetSceneProps {
   onSceneReady?: () => void;
   isSpaceView?: boolean;
   highlightPlanetId?: string | null;
-  timeScale?: number; // multiplier (negative = reverse, 0 = paused)
+  timeScale?: number;
+  closeUpPlanetId?: string | null;
+  onCloseUpExit?: () => void;
 }
 
-const PlanetScene = ({ planet, planets, onSceneReady, isSpaceView = false, highlightPlanetId, timeScale = 1 }: PlanetSceneProps) => {
+const PlanetScene = ({ planet, planets, onSceneReady, isSpaceView = false, highlightPlanetId, timeScale = 1, closeUpPlanetId, onCloseUpExit }: PlanetSceneProps) => {
   const mountRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
@@ -30,12 +33,17 @@ const PlanetScene = ({ planet, planets, onSceneReady, isSpaceView = false, highl
   const reticleRef = useRef<THREE.Group | null>(null);
   const frameIdRef = useRef<number>(0);
   const timeScaleRef = useRef<number>(timeScale);
+  const closeUpPlanetIdRef = useRef<string | null>(closeUpPlanetId || null);
   const [isLoading, setIsLoading] = useState(true);
 
   // Keep timeScale ref in sync so the animation loop always reads the latest value
   useEffect(() => {
     timeScaleRef.current = timeScale;
   }, [timeScale]);
+
+  useEffect(() => {
+    closeUpPlanetIdRef.current = closeUpPlanetId || null;
+  }, [closeUpPlanetId]);
 
   // Targeting reticle for search highlight
   useEffect(() => {
@@ -109,6 +117,7 @@ const PlanetScene = ({ planet, planets, onSceneReady, isSpaceView = false, highl
     createLighting(scene);
     createConstellations(scene);
     createMissionPaths(scene);
+    createSolarParticles(scene);
 
     const solarSystem = createSolarSystem(scene, planets, setIsLoading, onSceneReady);
     planetObjectsRef.current = solarSystem.planetObjects;
@@ -124,6 +133,7 @@ const PlanetScene = ({ planet, planets, onSceneReady, isSpaceView = false, highl
       isSpaceView,
       reticleRef,
       getTimeScale: () => timeScaleRef.current,
+      getCloseUpPlanetId: () => closeUpPlanetIdRef.current,
     });
 
     frameIdRef.current = frameId;
