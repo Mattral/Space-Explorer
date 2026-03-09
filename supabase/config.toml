@@ -1,0 +1,10 @@
+project_id = "uktojdqqyunagwwegzyn"
+
+[functions.astronomer-chat]
+verify_jwt = false
+
+[functions.solar-activity]
+verify_jwt = false
+
+[functions.neo-tracker]
+verify_jwt = false

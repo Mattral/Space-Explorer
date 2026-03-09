@@ -1,0 +1,379 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&family=Syne:wght@400;500;600;700;800&display=swap');
+
+@layer base {
+  :root {
+    /* Deep Space Foundation — slightly lifted for visibility */
+    --background: 225 35% 5%;
+    --foreground: 210 30% 95%;
+
+    --card: 225 30% 8%;
+    --card-foreground: 210 30% 94%;
+
+    --popover: 225 30% 7%;
+    --popover-foreground: 210 30% 94%;
+
+    /* Electric Cyan — primary accent */
+    --primary: 190 95% 55%;
+    --primary-foreground: 225 35% 5%;
+
+    --secondary: 225 25% 13%;
+    --secondary-foreground: 210 25% 80%;
+
+    --muted: 225 20% 11%;
+    --muted-foreground: 215 18% 50%;
+
+    /* Soft violet accent */
+    --accent: 265 75% 68%;
+    --accent-foreground: 210 30% 98%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 210 30% 98%;
+
+    --border: 215 25% 16%;
+    --input: 215 25% 13%;
+    --ring: 190 95% 55%;
+
+    --radius: 0.75rem;
+
+    /* === Signal System === */
+    --signal: 190 95% 55%;
+    --signal-dim: 190 70% 40%;
+    --signal-glow: 190 100% 65%;
+
+    --solar: 42 100% 60%;
+    --solar-dim: 38 80% 42%;
+
+    --alert: 0 80% 62%;
+    --alert-dim: 0 60% 42%;
+
+    --bio: 145 65% 50%;
+    --bio-dim: 145 45% 32%;
+
+    /* Glass panel */
+    --panel-bg: 225 40% 6%;
+    --panel-border: 215 30% 20%;
+    --panel-glow: 190 95% 55%;
+
+    /* Sidebar */
+    --sidebar-background: 225 35% 5%;
+    --sidebar-foreground: 210 25% 80%;
+    --sidebar-primary: 190 95% 55%;
+    --sidebar-primary-foreground: 225 35% 5%;
+    --sidebar-accent: 225 25% 11%;
+    --sidebar-accent-foreground: 210 25% 80%;
+    --sidebar-border: 215 25% 16%;
+    --sidebar-ring: 190 95% 55%;
+  }
+
+  .dark {
+    --background: 225 35% 5%;
+    --foreground: 210 30% 95%;
+    --card: 225 30% 8%;
+    --card-foreground: 210 30% 94%;
+    --popover: 225 30% 7%;
+    --popover-foreground: 210 30% 94%;
+    --primary: 190 95% 55%;
+    --primary-foreground: 225 35% 5%;
+    --secondary: 225 25% 13%;
+    --secondary-foreground: 210 25% 80%;
+    --muted: 225 20% 11%;
+    --muted-foreground: 215 18% 50%;
+    --accent: 265 75% 68%;
+    --accent-foreground: 210 30% 98%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 210 30% 98%;
+    --border: 215 25% 16%;
+    --input: 215 25% 13%;
+    --ring: 190 95% 55%;
+  }
+}
+
+@layer base {
+  * { @apply border-border; }
+
+  body {
+    @apply bg-background text-foreground;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    letter-spacing: -0.01em;
+  }
+
+  canvas { display: block; }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--panel-border) / 0.5);
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--panel-border) / 0.8);
+  }
+}
+
+/* ============================================================
+   GLASS PANEL — Apple frosted glass
+   ============================================================ */
+.info-panel {
+  background: linear-gradient(
+    160deg,
+    hsl(var(--panel-bg) / 0.72) 0%,
+    hsl(225 35% 8% / 0.82) 100%
+  );
+  backdrop-filter: blur(40px) saturate(1.6);
+  -webkit-backdrop-filter: blur(40px) saturate(1.6);
+  border: 1px solid hsl(var(--panel-border) / 0.35);
+  box-shadow:
+    0 0 0 0.5px hsl(210 30% 95% / 0.04) inset,
+    0 1px 0 0 hsl(210 30% 95% / 0.06) inset,
+    0 24px 80px -16px hsl(225 60% 2% / 0.7),
+    0 8px 24px -8px hsl(225 60% 2% / 0.4);
+  position: relative;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.info-panel:hover {
+  border-color: hsl(var(--panel-border) / 0.55);
+}
+
+.info-panel::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 10%,
+    hsl(210 30% 95% / 0.12) 40%,
+    hsl(210 30% 95% / 0.18) 50%,
+    hsl(210 30% 95% / 0.12) 60%,
+    transparent 90%
+  );
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* Active variant */
+.info-panel-active {
+  border-color: hsl(var(--signal) / 0.3);
+}
+.info-panel-active::before {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    hsl(var(--signal) / 0.4) 30%,
+    hsl(var(--signal) / 0.7) 50%,
+    hsl(var(--signal) / 0.4) 70%,
+    transparent 100%
+  );
+}
+
+/* ============================================================
+   TYPOGRAPHY — Apple-clean with monospace accents
+   ============================================================ */
+.telemetry-label {
+  font-family: 'JetBrains Mono', 'SF Mono', monospace;
+  font-size: 0.6rem;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: hsl(var(--muted-foreground));
+  line-height: 1.5;
+}
+
+.telemetry-value {
+  font-family: 'Inter', -apple-system, sans-serif;
+  font-weight: 600;
+  color: hsl(var(--foreground));
+  letter-spacing: -0.01em;
+}
+
+.telemetry-mono {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: hsl(var(--signal));
+}
+
+.display-heading {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+/* ============================================================
+   STATUS INDICATORS — clean, subtle
+   ============================================================ */
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: hsl(var(--bio));
+  box-shadow: 0 0 6px hsl(var(--bio) / 0.6);
+  animation: pulse-status 2.5s ease-in-out infinite;
+}
+
+.status-dot-signal {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: hsl(var(--signal));
+  box-shadow: 0 0 6px hsl(var(--signal) / 0.6);
+  animation: pulse-status 2s ease-in-out infinite;
+}
+
+@keyframes pulse-status {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.9); }
+}
+
+/* ============================================================
+   PLANET NAVIGATION — clean hover states
+   ============================================================ */
+.planet-btn {
+  transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  position: relative;
+  font-family: 'Inter', sans-serif;
+  border-left: 2px solid transparent;
+  border-radius: 8px;
+}
+
+.planet-btn:hover {
+  background: hsl(var(--signal) / 0.06);
+  border-left-color: hsl(var(--signal) / 0.4);
+}
+
+.planet-btn.active {
+  background: hsl(var(--signal) / 0.10);
+  border-left-color: hsl(var(--signal));
+}
+
+/* ============================================================
+   SCAN / LOADING
+   ============================================================ */
+@keyframes scan-line {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(250%); }
+}
+
+.scan-line {
+  animation: scan-line 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    hsl(var(--signal) / 0.5) 40%,
+    hsl(var(--signal) / 0.9) 50%,
+    hsl(var(--signal) / 0.5) 60%,
+    transparent 100%
+  );
+  width: 30%;
+  height: 100%;
+}
+
+/* ============================================================
+   DATA BAR
+   ============================================================ */
+.data-bar {
+  position: relative;
+  height: 3px;
+  background: hsl(var(--panel-border) / 0.4);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.data-bar-fill {
+  position: absolute;
+  top: 0; left: 0; bottom: 0;
+  border-radius: 2px;
+  background: linear-gradient(90deg, hsl(var(--signal)), hsl(var(--signal-glow)));
+  box-shadow: 0 0 8px hsl(var(--signal) / 0.4);
+  transition: width 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* ============================================================
+   HUD GRID — very subtle
+   ============================================================ */
+.hud-grid {
+  background-image:
+    linear-gradient(hsl(var(--signal) / 0.015) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(var(--signal) / 0.015) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+/* ============================================================
+   PLANET GLOW
+   ============================================================ */
+.planet-glow {
+  filter: drop-shadow(0 0 24px var(--planet-color, hsl(var(--signal))));
+}
+
+/* ============================================================
+   ANIMATIONS — smooth, Apple-like
+   ============================================================ */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-fade-up { animation: fade-up 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
+.animate-fade-in { animation: fade-in 0.5s ease forwards; }
+.animate-float { animation: float 6s ease-in-out infinite; }
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    hsl(var(--panel-border) / 0.2) 25%,
+    hsl(var(--signal) / 0.08) 50%,
+    hsl(var(--panel-border) / 0.2) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2.5s infinite;
+}
+
+/* ============================================================
+   RETICLE
+   ============================================================ */
+@keyframes reticle-pulse {
+  0%, 100% { opacity: 0.7; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.03); }
+}
+.reticle-ring { animation: reticle-pulse 1.6s ease-in-out infinite; }
+
+/* ============================================================
+   HUD BRACKETS
+   ============================================================ */
+.hud-bracket { position: relative; }
+.hud-bracket::before, .hud-bracket::after {
+  content: '';
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-color: hsl(var(--signal) / 0.2);
+  border-style: solid;
+}
+.hud-bracket::before { top: 0; left: 0; border-width: 1px 0 0 1px; }
+.hud-bracket::after { bottom: 0; right: 0; border-width: 0 1px 1px 0; }
